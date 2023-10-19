@@ -1,6 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 // const bot = new TelegramBot(process.env.TELEGRAM_BOT_API_TOKEN, { polling: true });
-const bot = new TelegramBot('6078146992:AAHCiTlyIUs8ulUGGtdyYNd8B_Z0uWz-dmA', { polling: true });
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_API_KEY, { polling: true });
 const config = require('./config');
 const { get: _get } = require('lodash');
 
