@@ -3,6 +3,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 
+console.log('node version', process.version);
+
 require('./src/bot.service');
 require('./src/tdlib.service');
 
