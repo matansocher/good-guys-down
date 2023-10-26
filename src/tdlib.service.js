@@ -1,7 +1,6 @@
 const path = require('path');
 const MTProto = require('@mtproto/core');
-const { getSRPParams } = require('@mtproto/core');
-const prompts = require('prompts');
+const botService = require('./bot.service');
 const controller = require('./controller');
 const config = require('./config');
 
@@ -15,6 +14,63 @@ const mtproto = new MTProto({
         path: path.resolve(__dirname, './data/1.json'),
     },
 });
+
+mtproto
+    .call('users.getFullUser', { id: { _: 'inputUserSelf' } })
+    .then(startListener) // means the user is logged in -> so start the listener
+    .catch(handleLogin);
+
+async function handleLogin(error) {
+    // The user is not logged in
+    console.log('[+] You must log in')
+    const phone_number = config.personalPhoneNumber;
+
+    mtproto.call('auth.sendCode', {
+        phone_number: phone_number,
+        settings: {
+            _: 'codeSettings',
+        },
+    })
+        .catch(error => {
+            console.log('111111111');
+            if (error.error_message.includes('_MIGRATE_')) {
+                const [type, nextDcId] = error.error_message.split('_MIGRATE_');
+
+                mtproto.setDefaultDc(+nextDcId);
+
+                return getCode(phone_number);
+            }
+        })
+        .then(async result => {
+            console.log('222222222');
+            return mtproto.call('auth.signIn', {
+                phone_code: await getCode(),
+                phone_number: phone_number,
+                phone_code_hash: result.phone_code_hash,
+            });
+        })
+        .catch(error => {
+            console.log('333333333');
+            throw new Error('password needed, failed to start the server');
+        })
+        .then(result => {
+            console.log('444444444');
+            console.log('[+] successfully authenticated');
+            // start listener since the user has logged in now
+            startListener()
+        });
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function getCode() {
+    const tempCode = botService.getTempCode();
+    if (!tempCode) {
+        await sleep(1000);
+        return getCode();
+    }
+    return tempCode;
+}
 
 function startListener() {
     console.log('[+] starting listener');
@@ -32,67 +88,3 @@ function startListener() {
         controller.processMessages(parsedMessages);
     });
 }
-
-async function handleLogin(error) {
-    // The user is not logged in
-    console.log('[+] You must log in')
-    const phone_number = config.personalPhoneNumber;
-
-    mtproto.call('auth.sendCode', {
-        phone_number: phone_number,
-        settings: {
-            _: 'codeSettings',
-        },
-    })
-        .catch(error => {
-            console.log('failed to fetch code for phone number');
-        })
-        .then(async result => {
-            const phone_code = await getCode();
-            const phone_code_hash = result.phone_code_hash;
-            return mtproto.call('auth.signIn', {
-                phone_code,
-                phone_number,
-                phone_code_hash,
-            });
-        })
-        .catch(error => {
-            console.log('failed to verify code for phone number');
-        })
-        .then(result => {
-            console.log('[+] successfully authenticated');
-            // start listener since the user has logged in now
-            startListener();
-        });
-}
-
-async function getPhone() {
-    return (await prompts({
-        type: 'text',
-        name: 'phone',
-        message: 'Enter your phone number:'
-    })).phone
-}
-
-async function getCode() {
-    // you can implement your code fetching strategy here
-    return (await prompts({
-        type: 'text',
-        name: 'code',
-        message: 'Enter the code sent:',
-    })).code
-}
-
-async function getPassword() {
-    return (await prompts({
-        type: 'text',
-        name: 'password',
-        message: 'Enter Password:',
-    })).password
-}
-
-// checking authentication status
-mtproto
-    .call('users.getFullUser', { id: { _: 'inputUserSelf' } })
-    .then(startListener) // means the user is logged in -> so start the listener
-    .catch(handleLogin);

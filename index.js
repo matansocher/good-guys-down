@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 
-// require('./src/telegram-bot/bot.service');
+require('./src/bot.service');
 require('./src/tdlib.service');
 
 app.use((req, res, next) => {
