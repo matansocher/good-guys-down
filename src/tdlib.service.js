@@ -1,6 +1,6 @@
 const path = require('path');
 const MTProto = require('@mtproto/core');
-const botService = require('./bot.service');
+const axios = require('axios');
 const controller = require('./controller');
 const config = require('./config');
 
@@ -64,9 +64,14 @@ async function handleLogin(error) {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function getCode() {
-    const tempCode = botService.getTempCode();
-    if (!tempCode) {
-        await sleep(1000);
+    const res = await axios.get('https://dkl-portfolio-be.herokuapp.com/get-2fa-temp-pass-good-guys-down-bot');
+    if (res.status !== 200) {
+        await sleep(3000);
+        return getCode();
+    }
+    const tempCode = res.data.temp;
+    if (!tempCode || tempCode === '' || tempCode === '11111') {
+        await sleep(3000);
         return getCode();
     }
     return tempCode;
@@ -80,9 +85,10 @@ function startListener() {
         for (const message of newChannelMessages) {
             const channelId = message.peer_id.channel_id;
             const messageText = message.message;
+            const fromChannelName = config.channelsToListenTo.find(channel => channel.channelId === channelId)?.channelName;
             if (channelId && messageText) {
                 console.log(`[${channelId}]: ${messageText}`);
-                parsedMessages.push({ channelId, messageText });
+                parsedMessages.push({ channelId, messageText, fromChannelName });
             }
         }
         controller.processMessages(parsedMessages);

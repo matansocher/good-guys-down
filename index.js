@@ -5,7 +5,7 @@ const app = express();
 
 console.log('node version', process.version);
 
-require('./src/bot.service');
+// require('./src/bot.service');
 require('./src/tdlib.service');
 
 app.use((req, res, next) => {

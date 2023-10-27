@@ -11,11 +11,12 @@ const config = {
 
     ourGroupIdContainingTheBot: -4032784514, // Good Guys Down public group id
     channelsToListenTo: [
-        '1727761169', // קבוצה
-        '1725562716', // חדשות לפני כולם בטלגרם
-        '1944652421', // אלמוג בוקר
-        '1406113886', // חדשות מהשטח בטלגרם
-        '1613161072', // דניאל עמרם
+        { channelId: '1727761169', channelName: 'קבוצה' },
+        { channelId: '1725562716', channelName: 'חדשות לפני כולם בטלגרם' },
+        { channelId: '1944652421', channelName: 'אלמוג בוקר' },
+        { channelId: '1406113886', channelName: 'חדשות מהשטח בטלגרם' },
+        { channelId: '1613161072', channelName: 'דניאל עמרם' },
+        { channelId: '1143765178', channelName: 'אבו עלי אקספרס' },
     ],
 };
 
